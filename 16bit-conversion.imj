@@ -1,0 +1,44 @@
+'Takes all images in input directory, converts to 16 bit, and saves in output directory
+// ===== USER SETTINGS =====
+inputFile = "/filepath/MouseLeft112025.ome.tif";
+outputDir = "/filepath/MouseLeft112025_16bit/";
+
+// ========================
+
+// Create output directory if it doesn't exist
+File.makeDirectory(outputDir);
+
+// Open using Bio-Formats
+run("Bio-Formats Importer", 
+    "open=[" + inputFile + "] " +
+    "autoscale color_mode=Default split_channels view=Hyperstack stack_order=XYCZT");
+
+// Get list of open images (one per channel)
+imageTitles = getList("image.titles");
+
+for (i = 0; i < imageTitles.length; i++) {
+
+    selectWindow(imageTitles[i]);
+
+    // Convert to 16-bit
+    run("16-bit");
+
+    // Auto-adjust Brightness & Contrast
+    run("Enhance Contrast", "saturated=0.35");
+
+    // Optional: show B&C window (comment out if you don't want it popping up)
+    run("Brightness/Contrast...");
+
+    // Build output filename
+    cleanTitle = replace(imageTitles[i], " ", "_");
+    savePath = outputDir + cleanTitle + "_16bit.tif";
+
+    // Save as TIFF
+    saveAs("Tiff", savePath);
+
+    // Close image to free memory
+    close();
+}
+
+// Done
+print("Processing complete.");
